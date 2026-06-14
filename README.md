@@ -1,16 +1,16 @@
 # Contribution [#]: [Issue Title]
 
-**Contribution Number:** [1 / 2 / 3]  
-**Student:** [Your Name]  
-**Issue:** [GitHub issue link]  
-**Status:** [Phase I / Phase II / Phase III / Phase IV] [In Progress / Complete]
+**Contribution Number:** [1 / 2 / 3]  1
+**Student:** Navaneeth Sujith
+**Issue:** https://github.com/apache/gluten/issues/4945
+**Status:** [Phase IV] [In Progress]
 
 ---
 
 ## Why I Chose This Issue
 
 [1-2 paragraphs explaining why this issue interests you, how it matches your skills/learning goals, what you hope to learn]
-
+I'm interested in supporting the skewness aggregate function because it seems like a useful feature that's currently missing from the Gluten ClickHouse backend. It would give me a chance to learn more about how aggregate functions are implemented in Gluten and how Spark functions are mapped to ClickHouse execution. I also like that it's a relatively focused contribution that can help improve Spark compatibility while adding support for a meaningful statistical function.
 ---
 
 ## Understanding the Issue
@@ -18,19 +18,19 @@
 ### Problem Description
 
 [In your own words, what's broken or missing?]
-
+This feature needs to be added.
 ### Expected Behavior
 
 [What should happen?]
-
+N/A
 ### Current Behavior
 
 [What actually happens?]
-
+N/A
 ### Affected Components
 
 [Which parts of the codebase are involved?]
-
+There are a few specific files.
 ---
 
 ## Reproduction Process
@@ -52,7 +52,7 @@
 - **My findings:** [What you discovered during reproduction]
 
 ---
-
+Not a Bug
 ## Solution Approach
 
 ### Analysis
