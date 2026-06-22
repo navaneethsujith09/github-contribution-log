@@ -64,7 +64,11 @@ Not a Bug
 [High-level description of your fix approach]
 
 ### Implementation Plan
+Support the skewness aggregate function in the ClickHouse backend:
 
+Maps Spark's skewness to ClickHouse's skewSamp
+Adds NaN→NULL conversion to match Spark's behavior when fewer than 3 non-null values are present
+Removes skewness from the unsupported function blacklist in CHExpressionUtil.scala
 Using UMPIRE framework (adapted):
 
 **Understand:** [Restate the problem]
@@ -125,13 +129,14 @@ Using UMPIRE framework (adapted):
 
 **PR Link:** [GitHub PR URL when submitted]
 
-**PR Description:** [Draft or final PR description - much of the content above can be adapted]
+**PR Description:** https://github.com/apache/gluten/pull/12294
 
 **Maintainer Feedback:**
 - [Date]: [Summary of feedback received]
+- remove comment, add additional support
 - [Date]: [How you addressed it]
 
-**Status:** [Awaiting review / Iterating / Approved / Merged]
+**Status:** [Awaiting review / **Iterating** / Approved / Merged]
 
 ---
 
