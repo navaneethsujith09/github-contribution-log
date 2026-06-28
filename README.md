@@ -1,90 +1,121 @@
-# Contribution [#]: [Issue Title]
+Contribution Number: **1**
 
-**Contribution Number:** [1 / 2 / 3]  1
 **Student:** Navaneeth Sujith
-**Issue:** https://github.com/apache/gluten/issues/4945
-**Status:** [Phase IV] [In Progress]
 
----
+**Issue:** apache/gluten#4945
+
+**Status:** **[Phase IV] [Complete]**
 
 ## Why I Chose This Issue
 
-[1-2 paragraphs explaining why this issue interests you, how it matches your skills/learning goals, what you hope to learn]
-I'm interested in supporting the skewness aggregate function because it seems like a useful feature that's currently missing from the Gluten ClickHouse backend. It would give me a chance to learn more about how aggregate functions are implemented in Gluten and how Spark functions are mapped to ClickHouse execution. I also like that it's a relatively focused contribution that can help improve Spark compatibility while adding support for a meaningful statistical function.
+I'm interested in supporting the skewness aggregate function because it seemed like a useful feature that was missing from the Gluten ClickHouse backend. It gave me the opportunity to learn more about how aggregate functions are implemented in Gluten and how Spark functions are translated into native ClickHouse execution.
+
+I also liked that this issue was focused enough to let me understand a specific part of the codebase while still making a meaningful contribution. Through this issue, I hoped to gain experience working with a large open-source project, following existing design patterns, and contributing code that improves Spark compatibility.
+
 ---
 
 ## Understanding the Issue
 
 ### Problem Description
 
-[In your own words, what's broken or missing?]
-This feature needs to be added.
+The ClickHouse backend in Gluten did not support Spark's `skewness` aggregate function. Because of this, queries using `skewness` could not execute natively and instead fell back to Spark execution.
+
 ### Expected Behavior
 
-[What should happen?]
-N/A
+Queries using `skewness` should execute natively using ClickHouse while producing results consistent with Spark SQL.
+
 ### Current Behavior
 
-[What actually happens?]
-N/A
+`skewness` was listed as an unsupported aggregate function in the ClickHouse backend, preventing native execution.
+
 ### Affected Components
 
-[Which parts of the codebase are involved?]
-There are a few specific files.
+* `CHExpressionUtil.scala`
+* Aggregate function transformer implementation
+* ClickHouse SQL tests
+* Native execution tests
+
 ---
 
 ## Reproduction Process
 
 ### Environment Setup
 
-[Notes on setting up your local development environment - challenges you faced, how you solved them]
+Built Gluten locally with the ClickHouse backend and configured a Spark development environment for running the ClickHouse unit tests. Most of the setup involved becoming familiar with the project's build process and test framework.
 
 ### Steps to Reproduce
 
-1. [Step 1]
-2. [Step 2]
-3. [Observed result]
+**Step 1**
+
+Build Gluten with the ClickHouse backend enabled.
+
+**Step 2**
+
+Run a Spark SQL query using the `skewness` aggregate function.
+
+**Observed Result**
+
+The query falls back instead of executing natively because `skewness` is marked as unsupported.
 
 ### Reproduction Evidence
 
-- **Commit showing reproduction:** [Link to commit in your fork]
-- **Screenshots/logs:** [If applicable]
-- **My findings:** [What you discovered during reproduction]
+**Commit showing reproduction:** N/A
+
+**Screenshots/logs:** N/A
+
+**My findings:**
+
+I found that the unsupported behavior came from `CHExpressionUtil.scala`, where `skewness` was explicitly included in the unsupported aggregate function list.
+
+**Not a Bug**
+
+This is a missing feature rather than a software bug.
 
 ---
-Not a Bug
+
 ## Solution Approach
 
 ### Analysis
 
-[Your analysis of the root cause - what's causing the issue?]
+ClickHouse already provides the `skewSamp` aggregate function, which computes the same statistic as Spark's `skewness`. The main work was mapping Spark's function to the ClickHouse implementation while preserving Spark semantics. One difference is that ClickHouse returns `NaN` when fewer than three non-null values are present, while Spark returns `NULL`.
 
 ### Proposed Solution
 
-[High-level description of your fix approach]
+Support the skewness aggregate function in the ClickHouse backend by:
+
+* Mapping Spark's `skewness` to ClickHouse's `skewSamp`.
+* Adding `NaN → NULL` conversion to match Spark behavior.
+* Removing `skewness` from the unsupported function blacklist.
+* Adding unit and SQL tests.
 
 ### Implementation Plan
+
 Support the skewness aggregate function in the ClickHouse backend:
 
-Maps Spark's skewness to ClickHouse's skewSamp
-Adds NaN→NULL conversion to match Spark's behavior when fewer than 3 non-null values are present
-Removes skewness from the unsupported function blacklist in CHExpressionUtil.scala
-Using UMPIRE framework (adapted):
+* Map Spark's `skewness` to ClickHouse's `skewSamp`.
+* Add `NaN → NULL` conversion to match Spark's behavior when fewer than three non-null values are present.
+* Remove `skewness` from the unsupported function blacklist in `CHExpressionUtil.scala`.
+* Add unit tests and SQL tests to verify correctness and native execution.
 
-**Understand:** [Restate the problem]
+**Using UMPIRE framework (adapted):**
 
-**Match:** [What similar patterns/solutions exist in the codebase?]
+**Understand:** Support Spark's `skewness` aggregate function while maintaining Spark-compatible behavior.
 
-**Plan:** [Step-by-step implementation plan]
-1. [Modify file X to do Y]
-2. [Add function Z]
-3. [Update tests]
+**Match:** Follow the implementation pattern used by existing statistical aggregate functions such as variance and standard deviation.
 
-**Implement:** [Link to your branch/commits as you work]
+**Plan:**
 
-**Review:** [Self-review checklist - does it follow the project's contribution guidelines?]
+* Remove `skewness` from the unsupported function list.
+* Add mapping to `skewSamp`.
+* Handle `NaN → NULL`.
+* Update SQL tests.
+* Add native execution verification.
 
-**Evaluate:** [How will you verify it works?]
+**Implement:** Implemented and submitted in PR **apache/gluten#12294**.
+
+**Review:** Verified coding style, Spark compatibility, and successful native execution.
+
+**Evaluate:** Ran ClickHouse backend tests, verified no fallback using `checkFallBack(df, noFallback = true)`, and compared results against vanilla Spark using `compareResultsAgainstVanillaSpark`.
 
 ---
 
@@ -92,51 +123,70 @@ Using UMPIRE framework (adapted):
 
 ### Unit Tests
 
-- [ ] Test case 1: [Description]
-- [ ] Test case 2: [Description]
-- [ ] Test case 3: [Description]
+☑ Test case 1: Verify correct skewness values for standard datasets.
+
+☑ Test case 2: Verify `NULL` is returned when fewer than three non-null values are present.
+
+☑ Test case 3: Verify native execution with no fallback.
 
 ### Integration Tests
 
-- [ ] Integration scenario 1
-- [ ] Integration scenario 2
+☑ Integration scenario 1: Execute SQL queries containing `skewness`.
+
+☑ Integration scenario 2: Compare ClickHouse backend results against vanilla Spark.
 
 ### Manual Testing
 
-[What you tested manually and results]
+Ran representative SQL queries locally and confirmed that results matched Spark while executing natively.
 
 ---
 
 ## Implementation Notes
 
-### Week [X] Progress
+### Week 1 Progress
 
-[What you built this week, challenges faced, decisions made]
+* Investigated the issue.
+* Learned how aggregate functions are implemented.
+* Identified the required files.
 
-### Week [Y] Progress
+### Week 2 Progress
 
-[Continue documenting as you work]
+* Implemented the function mapping.
+* Added compatibility handling for `NaN → NULL`.
+* Updated tests.
+* Submitted the pull request.
+* Addressed maintainer feedback.
 
-### Code Changes
+---
 
-- **Files modified:** [List]
-- **Key commits:** [Links to important commits]
-- **Approach decisions:** [Why you chose certain approaches]
+## Code Changes
 
+**Files modified:**
+
+* `CHExpressionUtil.scala`
+* Aggregate function transformer
+* ClickHouse SQL tests
+* Native execution tests
+
+**Key commits:**
+
+(PR contained in **apache/gluten#12294**)
+
+**Approach decisions:**
+
+Used ClickHouse's existing `skewSamp` implementation instead of creating a new aggregate function, minimizing changes while preserving Spark compatibility.
+https://github.com/apache/gluten/commit/fb646bedb9dbbfd04d8cfb5871c64c9dac0ddd84
 ---
 
 ## Pull Request
 
-**PR Link:** [GitHub PR URL when submitted]
-
-**PR Description:** https://github.com/apache/gluten/pull/12294
+**PR Link:** https://github.com/apache/gluten/commit/fb646bedb9dbbfd04d8cfb5871c64c9dac0ddd84
+**PR Description:** Support Spark skewness aggregate function in the ClickHouse backend by mapping to `skewSamp`, adding `NaN → NULL` conversion, removing the unsupported function restriction, and adding compatibility tests.
 
 **Maintainer Feedback:**
-- [Date]: [Summary of feedback received]
-- remove comment, add additional support
-- [Date]: [How you addressed it]
+He asked me to fix a couple of small things. 
 
-**Status:** [Awaiting review / **Iterating** / Approved / Merged]
+**Status:** Complete
 
 ---
 
@@ -144,20 +194,24 @@ Using UMPIRE framework (adapted):
 
 ### Technical Skills Gained
 
-[What you learned technically]
+* Learned how Gluten maps Spark SQL functions to ClickHouse.
+* Better understood aggregate function transformers.
+* Learned how Gluten verifies native execution through its testing framework.
 
 ### Challenges Overcome
 
-[What was hard and how you solved it]
+The biggest challenge was understanding where aggregate functions are registered and transformed. Looking at existing implementations helped me follow the project's architecture.
 
 ### What I'd Do Differently Next Time
 
-[Reflection on your process]
+I would spend more time reading similar implementations before starting so I could become familiar with the relevant code paths earlier.
 
 ---
 
 ## Resources Used
 
-- [Link to helpful documentation]
-- [Tutorial or Stack Overflow post that helped]
-- [GitHub issues or discussions that helped]
+* Apache Gluten source code
+* GitHub issue `apache/gluten#4945`
+* Pull Request `apache/gluten#12294`
+* Spark SQL documentation
+* ClickHouse aggregate function documentation
